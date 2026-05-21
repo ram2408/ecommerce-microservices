@@ -1,0 +1,9 @@
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/AuthServiceApplication.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/controller/AuthController.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/dto/AuthResponse.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/dto/LoginRequest.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/dto/RegisterRequest.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/model/User.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/repository/UserRepository.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/service/AuthService.java
+/Users/sriramkhandelwal/Desktop/Projects/ecommerce-microservices/services/auth-service/src/main/java/com/ecommerce/auth/service/JwtService.java
