@@ -3,6 +3,7 @@ package com.ecommerce.order.service;
 import com.ecommerce.order.client.CartClient;
 import com.ecommerce.order.client.dto.CartItemResponse;
 import com.ecommerce.order.client.dto.CartResponse;
+import com.ecommerce.order.event.OrderEventPublisher;
 import com.ecommerce.order.model.Order;
 import com.ecommerce.order.model.OrderItem;
 import com.ecommerce.order.model.OrderStatus;
@@ -20,10 +21,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final CartClient cartClient;
+    private final OrderEventPublisher orderEventPublisher;
 
-    public OrderService(OrderRepository orderRepository, CartClient cartClient) {
+    public OrderService(OrderRepository orderRepository, CartClient cartClient, OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.cartClient = cartClient;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     @Transactional
@@ -65,7 +68,10 @@ public class OrderService {
         // 4. Save the order and its cascade items to PostgreSQL
         Order savedOrder = orderRepository.save(order);
 
-        // 5. Clear the shopping cart asynchronously (conceptually) or synchronously via Feign
+        // 5. Publish the Order Created Event asynchronously to RabbitMQ
+        orderEventPublisher.publishOrderCreatedEvent(savedOrder);
+
+        // 6. Clear the shopping cart
         cartClient.clearCart(userId);
 
         return savedOrder;
