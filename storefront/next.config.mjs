@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  // Configured root directory for subdirectory Vercel deployments
+};
 
 export default nextConfig;
