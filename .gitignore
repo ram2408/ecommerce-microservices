@@ -13,3 +13,8 @@ target/
 # System files
 .DS_Store
 Thumbs.db
+
+# Docker local database storage and logs
+docker-data/
+logs/
+.env

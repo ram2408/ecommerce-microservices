@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.function.Consumer;
 
-@Configuration
+@Configuration("paymentOrderCreatedConsumerConfig")
 public class OrderCreatedConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(OrderCreatedConsumer.class);

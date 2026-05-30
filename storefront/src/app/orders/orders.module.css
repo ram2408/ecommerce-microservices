@@ -1,0 +1,346 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+.header {
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #FFF 30%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.errorAlert {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #FCA5A5;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+/* Loading States */
+.loadingSpinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-glass);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+  border-radius: 20px !important;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyState h3 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.emptyState p {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  max-width: 420px;
+}
+
+.shopBtn {
+  background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+  color: #FFF;
+  padding: 12px 28px;
+  border-radius: 99px;
+  font-weight: 600;
+  box-shadow: var(--glow-primary);
+}
+
+.shopBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.3);
+}
+
+/* Orders List & Card styling */
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.orderCard {
+  border-radius: 16px !important;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.expandedCard {
+  border-color: var(--border-glass-active);
+  background: rgba(15, 20, 35, 0.65);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  padding: 24px 32px;
+  cursor: pointer;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.summaryRow:hover {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.metaCol, .dateCol, .amountCol, .statusCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.orderIdLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.orderId {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-title);
+}
+
+.metaLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.metaVal {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.amount {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--secondary);
+  font-family: var(--font-title);
+}
+
+/* Badges */
+.statusBadge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 99px;
+  border: 1px solid;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.pending {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
+}
+
+.paid {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+}
+
+.cancelled {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #F87171;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
+}
+
+.expandBtn {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: transform 0.3s ease;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  border-radius: 50%;
+}
+
+.expandActive {
+  transform: rotate(180deg);
+  color: var(--text-primary);
+  border-color: var(--border-glass-active);
+}
+
+/* Expanded details section */
+.detailsSection {
+  padding: 0 32px 32px 32px;
+  border-top: 1px solid var(--border-glass);
+  animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.itemsHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0 16px 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-glass);
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.itemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-glass);
+  padding: 12px 20px;
+  border-radius: 8px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.itemNameCol {
+  flex: 2;
+  min-width: 200px;
+}
+
+.itemNameCol h4 {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.itemNameCol p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.itemQtyCol {
+  flex: 0.5;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.itemPriceCol, .itemTotalCol {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.itemTotalCol {
+  color: var(--text-primary);
+}
+
+.auditFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.auditFooter p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.auditFooter code {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.refreshStatusBtn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+}
+
+.refreshStatusBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-glass-active);
+  color: var(--text-primary);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

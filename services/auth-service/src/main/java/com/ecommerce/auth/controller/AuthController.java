@@ -31,4 +31,10 @@ public class AuthController {
     public ResponseEntity<Boolean> validateToken(@RequestParam String token) {
         return ResponseEntity.ok(authService.validateToken(token));
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<java.util.Map<String, String>> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(400)
+                .body(java.util.Map.of("error", ex.getMessage()));
+    }
 }

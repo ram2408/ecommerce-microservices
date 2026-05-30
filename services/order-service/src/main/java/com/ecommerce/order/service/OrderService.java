@@ -8,8 +8,12 @@ import com.ecommerce.order.model.Order;
 import com.ecommerce.order.model.OrderItem;
 import com.ecommerce.order.model.OrderStatus;
 import com.ecommerce.order.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,6 +22,8 @@ import java.util.Optional;
 
 @Service
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
     private final CartClient cartClient;
@@ -68,8 +74,18 @@ public class OrderService {
         // 4. Save the order and its cascade items to PostgreSQL
         Order savedOrder = orderRepository.save(order);
 
-        // 5. Publish the Order Created Event asynchronously to RabbitMQ
-        orderEventPublisher.publishOrderCreatedEvent(savedOrder);
+        // 5. Publish the Order Created Event asynchronously to RabbitMQ after database transaction commits
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info("Transaction committed successfully for Order #{}. Publishing event.", savedOrder.getId());
+                    orderEventPublisher.publishOrderCreatedEvent(savedOrder);
+                }
+            });
+        } else {
+            orderEventPublisher.publishOrderCreatedEvent(savedOrder);
+        }
 
         // 6. Clear the shopping cart
         cartClient.clearCart(userId);
@@ -83,5 +99,15 @@ public class OrderService {
 
     public List<Order> getOrdersByUserId(String userId) {
         return orderRepository.findByUserId(userId);
+    }
+
+    @Transactional
+    public void updateOrderStatus(Long orderId, OrderStatus status) {
+        log.info("Attempting to transition Order #{} status to {}", orderId, status);
+        Order order = getOrderById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        order.setStatus(status);
+        orderRepository.save(order);
+        log.info("Order #{} status successfully updated to {}", orderId, status);
     }
 }
