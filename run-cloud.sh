@@ -10,4 +10,4 @@ else
 fi
 
 # Execute standard orchestrator
-./run-platform.sh restart
+./run-platform.sh restart "$@"
