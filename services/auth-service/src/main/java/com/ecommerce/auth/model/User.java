@@ -13,7 +13,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(nullable = false)
@@ -21,6 +21,12 @@ public class User {
 
     @Column(nullable = false)
     private String role;
+
+    @Column(name = "auth_provider")
+    private String authProvider;
+
+    @Column(name = "provider_id")
+    private String providerId;
 
     // Constructors
     public User() {}
@@ -30,6 +36,15 @@ public class User {
         this.password = password;
         this.name = name;
         this.role = role;
+        this.authProvider = "LOCAL";
+    }
+
+    public User(String email, String name, String role, String authProvider, String providerId) {
+        this.email = email;
+        this.name = name;
+        this.role = role;
+        this.authProvider = authProvider;
+        this.providerId = providerId;
     }
 
     // Getters and Setters
@@ -47,4 +62,10 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public String getAuthProvider() { return authProvider; }
+    public void setAuthProvider(String authProvider) { this.authProvider = authProvider; }
+
+    public String getProviderId() { return providerId; }
+    public void setProviderId(String providerId) { this.providerId = providerId; }
 }

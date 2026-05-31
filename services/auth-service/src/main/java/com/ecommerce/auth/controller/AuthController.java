@@ -3,6 +3,7 @@ package com.ecommerce.auth.controller;
 import com.ecommerce.auth.dto.AuthResponse;
 import com.ecommerce.auth.dto.LoginRequest;
 import com.ecommerce.auth.dto.RegisterRequest;
+import com.ecommerce.auth.dto.OAuthRequest;
 import com.ecommerce.auth.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> loginWithGoogle(@RequestBody OAuthRequest request) {
+        return ResponseEntity.ok(authService.loginWithGoogle(request.tokenOrCode()));
+    }
+
+    @PostMapping("/github")
+    public ResponseEntity<AuthResponse> loginWithGithub(@RequestBody OAuthRequest request) {
+        return ResponseEntity.ok(authService.loginWithGithub(request.tokenOrCode()));
     }
 
     @GetMapping("/validate")
