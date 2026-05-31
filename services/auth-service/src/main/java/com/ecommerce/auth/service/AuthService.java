@@ -199,17 +199,7 @@ public class AuthService {
                 userRepository.save(user);
             }
         } else {
-            user = new User(
-                    email,
-                    name,
-                    "USER",
-                    provider,
-                    providerId
-            );
-            userRepository.save(user);
-            
-            // Trigger welcome email asynchronously
-            emailService.sendWelcomeEmail(user.getEmail(), user.getName());
+            throw new RuntimeException("No account found with email: " + email + ". Please register an account first.");
         }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole(), user.getName());
