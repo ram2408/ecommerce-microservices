@@ -76,6 +76,52 @@ export function AppProvider({ children }) {
     }
   };
 
+  const loginWithGoogle = async (idToken) => {
+    try {
+      const response = await apiFetch('/api/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ tokenOrCode: idToken })
+      });
+      
+      if (response && response.token) {
+        const userObj = { email: response.email, name: response.name };
+        setAuthToken(response.token);
+        setAuthUser(userObj);
+        setToken(response.token);
+        setUser(userObj);
+        
+        await fetchCart(response.email);
+        return { success: true };
+      }
+      return { success: false, error: 'Invalid server response' };
+    } catch (err) {
+      return { success: false, error: err.message || 'Google authentication failed' };
+    }
+  };
+
+  const loginWithGithub = async (code) => {
+    try {
+      const response = await apiFetch('/api/auth/github', {
+        method: 'POST',
+        body: JSON.stringify({ tokenOrCode: code })
+      });
+      
+      if (response && response.token) {
+        const userObj = { email: response.email, name: response.name };
+        setAuthToken(response.token);
+        setAuthUser(userObj);
+        setToken(response.token);
+        setUser(userObj);
+        
+        await fetchCart(response.email);
+        return { success: true };
+      }
+      return { success: false, error: 'Invalid server response' };
+    } catch (err) {
+      return { success: false, error: err.message || 'GitHub authentication failed' };
+    }
+  };
+
   const logoutUser = () => {
     setAuthToken(null);
     setAuthUser(null);
@@ -151,6 +197,8 @@ export function AppProvider({ children }) {
       setCartDrawerOpen,
       loginUser,
       registerUser,
+      loginWithGoogle,
+      loginWithGithub,
       logoutUser,
       addToCart,
       removeFromCart,
