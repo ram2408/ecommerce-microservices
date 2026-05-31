@@ -54,56 +54,51 @@ export default function AuthPage() {
     }
   }, [loginWithGithub, router]);
 
-  // Load and initialize Google API
+  // Handle Google OAuth callback id_token
   useEffect(() => {
-    if (!googleClientId) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: handleGoogleCredentialResponse,
-        });
-        window.google.accounts.id.renderButton(
-          document.getElementById('google-btn-container'),
-          { theme: 'outline', size: 'large', width: '220', text: 'continue_with' }
-        );
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash && hash.includes('id_token=')) {
+        const params = new URLSearchParams(hash.substring(1)); // strip '#'
+        const idToken = params.get('id_token');
+        if (idToken) {
+          // Strip the id_token from the address bar so it doesn't replay on refresh
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          setError('');
+          setSuccess('Completing Google authentication...');
+          setSubmitting(true);
+          
+          loginWithGoogle(idToken)
+            .then((result) => {
+              if (result.success) {
+                setSuccess('Google authentication successful! Welcome.');
+                setTimeout(() => {
+                  router.push('/');
+                }, 1500);
+              } else {
+                setError(result.error || 'Google login failed.');
+                setSubmitting(false);
+              }
+            })
+            .catch((err) => {
+              setError(err.message || 'Google login failed.');
+              setSubmitting(false);
+            });
+        }
       }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      // Safe cleanup check
-      try {
-        document.body.removeChild(script);
-      } catch (e) {}
-    };
-  }, [googleClientId]);
-
-  const handleGoogleCredentialResponse = async (response) => {
-    setError('');
-    setSuccess('Verifying Google credentials...');
-    setSubmitting(true);
-
-    try {
-      const result = await loginWithGoogle(response.credential);
-      if (result.success) {
-        setSuccess('Google authentication successful! Welcome.');
-        setTimeout(() => {
-          router.push('/');
-        }, 1500);
-      } else {
-        setError(result.error || 'Google login failed.');
-        setSubmitting(false);
-      }
-    } catch (err) {
-      setError('An unexpected error occurred during Google Sign-In.');
-      setSubmitting(false);
     }
+  }, [loginWithGoogle, router]);
+
+  const handleGoogleRealLogin = () => {
+    const redirectUri = window.location.origin + '/auth';
+    // OpenID Connect Implicit flow to get id_token
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=id_token&scope=email%20profile%20openid&nonce=aura${Date.now()}`;
+  };
+
+  const handleGithubRealLogin = () => {
+    const redirectUri = window.location.origin + '/auth';
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=user:email`;
   };
 
   const handleMockGoogleLogin = async () => {
@@ -146,11 +141,6 @@ export default function AuthPage() {
       setError('Mock GitHub login failed.');
       setSubmitting(false);
     }
-  };
-
-  const handleGithubRealLogin = () => {
-    const redirectUri = window.location.origin + '/auth';
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=user:email`;
   };
 
   // If already logged in, redirect home
@@ -267,7 +257,20 @@ export default function AuthPage() {
 
         <div className={styles.socialGroup}>
           {hasGoogleKeys ? (
-            <div id="google-btn-container" style={{ display: 'flex', justifyContent: 'center' }}></div>
+            <button 
+              type="button" 
+              onClick={handleGoogleRealLogin} 
+              className={styles.socialBtn}
+              disabled={submitting}
+            >
+              <svg className={styles.socialIcon} viewBox="0 0 24 24" width="18" height="18">
+                <path fill="#EA4335" d="M12 5.04c1.62 0 3.08.56 4.22 1.65l3.15-3.15C17.45 1.84 14.97 1 12 1 7.35 1 3.39 3.67 1.41 7.56l3.75 2.91C6.04 7.56 8.78 5.04 12 5.04z"/>
+                <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.58l3.73 2.89c2.18-2 3.7-4.96 3.7-8.62z"/>
+                <path fill="#FBBC05" d="M5.16 14.88c-.24-.72-.38-1.49-.38-2.28 0-.79.14-1.56.38-2.28L1.41 7.56C.51 9.35 0 11.35 0 13.5s.51 4.15 1.41 5.94l3.75-2.56z"/>
+                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.11.75-2.53 1.2-4.23 1.2-3.22 0-5.96-2.52-6.93-5.52l-3.75 2.91C3.39 20.33 7.35 23 12 23z"/>
+              </svg>
+              <span>Google</span>
+            </button>
           ) : (
             <button 
               type="button" 
