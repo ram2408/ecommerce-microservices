@@ -31,13 +31,14 @@ export default function AuthPage() {
         window.history.replaceState({}, document.title, window.location.pathname);
         
         setError('');
-        setSuccess('Completing GitHub authentication...');
+        const registerFlag = sessionStorage.getItem('isRegistering') === 'true';
+        setSuccess(registerFlag ? 'Completing GitHub registration...' : 'Completing GitHub authentication...');
         setSubmitting(true);
         
-        loginWithGithub(code)
+        loginWithGithub(code, registerFlag)
           .then((result) => {
             if (result.success) {
-              setSuccess('GitHub authentication successful! Welcome.');
+              setSuccess(registerFlag ? 'GitHub registration successful! Welcome.' : 'GitHub authentication successful! Welcome.');
               setTimeout(() => {
                 router.push('/');
               }, 1500);
@@ -66,13 +67,14 @@ export default function AuthPage() {
           window.history.replaceState({}, document.title, window.location.pathname);
           
           setError('');
-          setSuccess('Completing Google authentication...');
+          const registerFlag = sessionStorage.getItem('isRegistering') === 'true';
+          setSuccess(registerFlag ? 'Completing Google registration...' : 'Completing Google authentication...');
           setSubmitting(true);
           
-          loginWithGoogle(idToken)
+          loginWithGoogle(idToken, registerFlag)
             .then((result) => {
               if (result.success) {
-                setSuccess('Google authentication successful! Welcome.');
+                setSuccess(registerFlag ? 'Google registration successful! Welcome.' : 'Google authentication successful! Welcome.');
                 setTimeout(() => {
                   router.push('/');
                 }, 1500);
@@ -92,23 +94,25 @@ export default function AuthPage() {
 
   const handleGoogleRealLogin = () => {
     const redirectUri = window.location.origin + '/auth';
+    sessionStorage.setItem('isRegistering', isRegistering ? 'true' : 'false');
     // OpenID Connect Implicit flow to get id_token
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=id_token&scope=email%20profile%20openid&nonce=aura${Date.now()}`;
   };
 
   const handleGithubRealLogin = () => {
     const redirectUri = window.location.origin + '/auth';
+    sessionStorage.setItem('isRegistering', isRegistering ? 'true' : 'false');
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=user:email`;
   };
 
   const handleMockGoogleLogin = async () => {
     setError('');
-    setSuccess('Authenticating with Google (Dev Mock)...');
+    setSuccess(isRegistering ? 'Registering with Google (Dev Mock)...' : 'Authenticating with Google (Dev Mock)...');
     setSubmitting(true);
     try {
-      const result = await loginWithGoogle('mock-google-token');
+      const result = await loginWithGoogle('mock-google-token', isRegistering);
       if (result.success) {
-        setSuccess('Mock Google login successful! Welcome.');
+        setSuccess(isRegistering ? 'Mock Google registration successful! Welcome.' : 'Mock Google login successful! Welcome.');
         setTimeout(() => {
           router.push('/');
         }, 1500);
@@ -124,12 +128,12 @@ export default function AuthPage() {
 
   const handleMockGithubLogin = async () => {
     setError('');
-    setSuccess('Authenticating with GitHub (Dev Mock)...');
+    setSuccess(isRegistering ? 'Registering with GitHub (Dev Mock)...' : 'Authenticating with GitHub (Dev Mock)...');
     setSubmitting(true);
     try {
-      const result = await loginWithGithub('mock-github-code');
+      const result = await loginWithGithub('mock-github-code', isRegistering);
       if (result.success) {
-        setSuccess('Mock GitHub login successful! Welcome.');
+        setSuccess(isRegistering ? 'Mock GitHub registration successful! Welcome.' : 'Mock GitHub login successful! Welcome.');
         setTimeout(() => {
           router.push('/');
         }, 1500);

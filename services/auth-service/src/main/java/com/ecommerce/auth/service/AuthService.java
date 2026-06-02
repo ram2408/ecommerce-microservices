@@ -69,7 +69,7 @@ public class AuthService {
         return new AuthResponse(token, user.getEmail(), user.getName(), user.getRole());
     }
 
-    public AuthResponse loginWithGoogle(String idToken) {
+    public AuthResponse loginWithGoogle(String idToken, boolean isRegistering) {
         String email;
         String name;
         String providerId;
@@ -94,10 +94,10 @@ public class AuthService {
             }
         }
 
-        return getOrCreateOAuthUser(email, name, "GOOGLE", providerId);
+        return getOrCreateOAuthUser(email, name, "GOOGLE", providerId, isRegistering);
     }
 
-    public AuthResponse loginWithGithub(String code) {
+    public AuthResponse loginWithGithub(String code, boolean isRegistering) {
         String email;
         String name;
         String providerId;
@@ -185,10 +185,10 @@ public class AuthService {
             }
         }
 
-        return getOrCreateOAuthUser(email, name, "GITHUB", providerId);
+        return getOrCreateOAuthUser(email, name, "GITHUB", providerId, isRegistering);
     }
 
-    private AuthResponse getOrCreateOAuthUser(String email, String name, String provider, String providerId) {
+    private AuthResponse getOrCreateOAuthUser(String email, String name, String provider, String providerId, boolean isRegistering) {
         java.util.Optional<User> existingUser = userRepository.findByEmail(email);
         User user;
         if (existingUser.isPresent()) {
@@ -199,7 +199,23 @@ public class AuthService {
                 userRepository.save(user);
             }
         } else {
-            throw new RuntimeException("No account found with email: " + email + ". Please register an account first.");
+            if (isRegistering) {
+                // Register a new OAuth user
+                user = new User(
+                        email,
+                        null, // Null password for OAuth users
+                        name != null ? name : email.split("@")[0],
+                        "USER" // Default role
+                );
+                user.setAuthProvider(provider);
+                user.setProviderId(providerId);
+                userRepository.save(user);
+                
+                // Trigger welcome email asynchronously
+                emailService.sendWelcomeEmail(user.getEmail(), user.getName());
+            } else {
+                throw new RuntimeException("No account found with email: " + email + ". Please register first.");
+            }
         }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole(), user.getName());

@@ -30,12 +30,14 @@ public class AuthController {
 
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> loginWithGoogle(@RequestBody OAuthRequest request) {
-        return ResponseEntity.ok(authService.loginWithGoogle(request.tokenOrCode()));
+        boolean register = request.isRegistering() != null && request.isRegistering();
+        return ResponseEntity.ok(authService.loginWithGoogle(request.tokenOrCode(), register));
     }
 
     @PostMapping("/github")
     public ResponseEntity<AuthResponse> loginWithGithub(@RequestBody OAuthRequest request) {
-        return ResponseEntity.ok(authService.loginWithGithub(request.tokenOrCode()));
+        boolean register = request.isRegistering() != null && request.isRegistering();
+        return ResponseEntity.ok(authService.loginWithGithub(request.tokenOrCode(), register));
     }
 
     @GetMapping("/validate")

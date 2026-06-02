@@ -1,3 +1,3 @@
 package com.ecommerce.auth.dto;
 
-public record OAuthRequest(String tokenOrCode) {}
+public record OAuthRequest(String tokenOrCode, Boolean isRegistering) {}

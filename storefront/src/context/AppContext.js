@@ -76,11 +76,11 @@ export function AppProvider({ children }) {
     }
   };
 
-  const loginWithGoogle = async (idToken) => {
+  const loginWithGoogle = async (idToken, isRegistering = false) => {
     try {
       const response = await apiFetch('/api/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ tokenOrCode: idToken })
+        body: JSON.stringify({ tokenOrCode: idToken, isRegistering })
       });
       
       if (response && response.token) {
@@ -99,11 +99,11 @@ export function AppProvider({ children }) {
     }
   };
 
-  const loginWithGithub = async (code) => {
+  const loginWithGithub = async (code, isRegistering = false) => {
     try {
       const response = await apiFetch('/api/auth/github', {
         method: 'POST',
-        body: JSON.stringify({ tokenOrCode: code })
+        body: JSON.stringify({ tokenOrCode: code, isRegistering })
       });
       
       if (response && response.token) {
