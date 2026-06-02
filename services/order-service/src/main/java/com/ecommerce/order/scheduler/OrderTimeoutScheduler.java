@@ -36,16 +36,18 @@ public class OrderTimeoutScheduler {
         LocalDateTime expirationThreshold = LocalDateTime.now().minusMinutes(TIMEOUT_MINUTES);
         log.debug("Running pending orders timeout sweep. Threshold: {}", expirationThreshold);
 
-        List<Order> stuckOrders = orderRepository.findByStatusAndCreatedAtBefore(OrderStatus.PENDING, expirationThreshold);
+        List<Order> stuckOrders = new java.util.ArrayList<>();
+        stuckOrders.addAll(orderRepository.findByStatusAndCreatedAtBefore(OrderStatus.PENDING, expirationThreshold));
+        stuckOrders.addAll(orderRepository.findByStatusAndCreatedAtBefore(OrderStatus.PENDING_PAYMENT, expirationThreshold));
 
         if (!stuckOrders.isEmpty()) {
-            log.info("Found {} PENDING orders older than {} minutes. Triggering automatic timeout cancellations...",
+            log.info("Found {} PENDING/PENDING_PAYMENT orders older than {} minutes. Triggering automatic timeout cancellations...",
                     stuckOrders.size(), TIMEOUT_MINUTES);
 
             for (Order order : stuckOrders) {
                 try {
-                    log.warn("Order #{} has timed out in PENDING state (created at {}). Transitioning to CANCELLED.",
-                            order.getId(), order.getCreatedAt());
+                    log.warn("Order #{} has timed out in {} state (created at {}). Transitioning to CANCELLED.",
+                            order.getId(), order.getStatus(), order.getCreatedAt());
                     orderService.updateOrderStatus(order.getId(), OrderStatus.CANCELLED);
                 } catch (Exception e) {
                     log.error("Failed to transition timed-out Order #{} to CANCELLED status", order.getId(), e);

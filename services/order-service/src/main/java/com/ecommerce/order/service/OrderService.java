@@ -1,8 +1,11 @@
 package com.ecommerce.order.service;
 
 import com.ecommerce.order.client.CartClient;
+import com.ecommerce.order.client.PaymentClient;
 import com.ecommerce.order.client.dto.CartItemResponse;
 import com.ecommerce.order.client.dto.CartResponse;
+import com.ecommerce.order.client.dto.PaymentInitiateRequest;
+import com.ecommerce.order.client.dto.PaymentInitiateResponse;
 import com.ecommerce.order.event.OrderEventPublisher;
 import com.ecommerce.order.model.Order;
 import com.ecommerce.order.model.OrderItem;
@@ -19,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -27,11 +31,16 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final CartClient cartClient;
+    private final PaymentClient paymentClient;
     private final OrderEventPublisher orderEventPublisher;
 
-    public OrderService(OrderRepository orderRepository, CartClient cartClient, OrderEventPublisher orderEventPublisher) {
+    public OrderService(OrderRepository orderRepository,
+                        CartClient cartClient,
+                        PaymentClient paymentClient,
+                        OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.cartClient = cartClient;
+        this.paymentClient = paymentClient;
         this.orderEventPublisher = orderEventPublisher;
     }
 
@@ -47,7 +56,7 @@ public class OrderService {
         // 2. Initialize the Order entity
         Order order = new Order();
         order.setUserId(userId);
-        order.setStatus(OrderStatus.PENDING);
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
         order.setCreatedAt(LocalDateTime.now());
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -74,7 +83,21 @@ public class OrderService {
         // 4. Save the order and its cascade items to PostgreSQL
         Order savedOrder = orderRepository.save(order);
 
-        // 5. Publish the Order Created Event asynchronously to RabbitMQ after database transaction commits
+        // 5. Call payment-service to initialize Razorpay Order
+        try {
+            PaymentInitiateResponse paymentResponse = paymentClient.initiatePayment(
+                    new PaymentInitiateRequest(savedOrder.getId(), userId, totalAmount)
+            );
+            savedOrder.setRazorpayOrderId(paymentResponse.razorpayOrderId());
+            savedOrder.setRazorpayKeyId(paymentResponse.keyId());
+            savedOrder.setMockMode(paymentResponse.mockMode());
+        } catch (Exception e) {
+            log.error("Failed to initiate payment via payment-service: {}. Falling back to mock mode.", e.getMessage());
+            savedOrder.setRazorpayOrderId("order_mock_" + UUID.randomUUID().toString().substring(0, 12));
+            savedOrder.setMockMode(true);
+        }
+
+        // 6. Publish the Order Created Event asynchronously to RabbitMQ after database transaction commits
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -87,7 +110,7 @@ public class OrderService {
             orderEventPublisher.publishOrderCreatedEvent(savedOrder);
         }
 
-        // 6. Clear the shopping cart
+        // 7. Clear the shopping cart
         cartClient.clearCart(userId);
 
         return savedOrder;

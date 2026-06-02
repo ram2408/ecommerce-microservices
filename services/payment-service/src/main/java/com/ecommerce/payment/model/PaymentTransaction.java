@@ -31,6 +31,15 @@ public class PaymentTransaction {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
+    @Column(name = "razorpay_order_id")
+    private String razorpayOrderId;
+
+    @Column(name = "razorpay_payment_id")
+    private String razorpayPaymentId;
+
+    @Column(name = "razorpay_signature")
+    private String razorpaySignature;
+
     // Constructors
     public PaymentTransaction() {}
 
@@ -41,6 +50,31 @@ public class PaymentTransaction {
         this.status = status;
         this.transactionReference = transactionReference;
         this.timestamp = timestamp;
+    }
+
+    // Getters and Setters
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
+
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
+    }
+
+    public String getRazorpayPaymentId() {
+        return razorpayPaymentId;
+    }
+
+    public void setRazorpayPaymentId(String razorpayPaymentId) {
+        this.razorpayPaymentId = razorpayPaymentId;
+    }
+
+    public String getRazorpaySignature() {
+        return razorpaySignature;
+    }
+
+    public void setRazorpaySignature(String razorpaySignature) {
+        this.razorpaySignature = razorpaySignature;
     }
 
     // Getters and Setters

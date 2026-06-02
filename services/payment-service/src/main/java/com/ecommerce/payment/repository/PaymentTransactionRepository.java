@@ -10,4 +10,5 @@ import java.util.List;
 public interface PaymentTransactionRepository extends CrudRepository<PaymentTransaction, Long> {
     List<PaymentTransaction> findByUserId(String userId);
     List<PaymentTransaction> findByOrderId(Long orderId);
+    java.util.Optional<PaymentTransaction> findByRazorpayOrderId(String razorpayOrderId);
 }

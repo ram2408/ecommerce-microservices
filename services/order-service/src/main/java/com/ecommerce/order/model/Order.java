@@ -30,6 +30,15 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
+    @Transient
+    private String razorpayOrderId;
+
+    @Transient
+    private String razorpayKeyId;
+
+    @Transient
+    private boolean mockMode;
+
     // Constructors
     public Order() {}
 
@@ -93,5 +102,29 @@ public class Order {
 
     public void setItems(List<OrderItem> items) {
         this.items = items;
+    }
+
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
+
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
+    }
+
+    public String getRazorpayKeyId() {
+        return razorpayKeyId;
+    }
+
+    public void setRazorpayKeyId(String razorpayKeyId) {
+        this.razorpayKeyId = razorpayKeyId;
+    }
+
+    public boolean isMockMode() {
+        return mockMode;
+    }
+
+    public void setMockMode(boolean mockMode) {
+        this.mockMode = mockMode;
     }
 }
