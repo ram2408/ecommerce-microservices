@@ -31,6 +31,10 @@ export default function CheckoutPage() {
   const [upiIdInput, setUpiIdInput] = useState('');
   const [upiMessage, setUpiMessage] = useState('');
 
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
+  const [saveAddressCheckbox, setSaveAddressCheckbox] = useState(true);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -49,6 +53,60 @@ export default function CheckoutPage() {
       document.body.removeChild(script);
     };
   }, [user, router]);
+
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+      const localData = localStorage.getItem(`addresses_${user.email}`);
+      if (localData) {
+        try {
+          const parsed = JSON.parse(localData);
+          setSavedAddresses(parsed);
+          // Auto-select first address if available
+          if (parsed.length > 0) {
+            setSelectedAddressId(parsed[0].id);
+            setShippingName(parsed[0].name);
+            setAddress(parsed[0].street);
+            setCity(parsed[0].city);
+            setZipCode(parsed[0].zip);
+          }
+        } catch (e) {
+          console.error('Failed to parse saved addresses', e);
+        }
+      }
+    }
+  }, [user]);
+
+  const handleSelectAddress = (addressId) => {
+    setSelectedAddressId(addressId);
+    if (addressId === '') {
+      setShippingName('');
+      setAddress('');
+      setCity('');
+      setZipCode('');
+      return;
+    }
+    const selected = savedAddresses.find(addr => addr.id === addressId);
+    if (selected) {
+      setShippingName(selected.name);
+      setAddress(selected.street);
+      setCity(selected.city);
+      setZipCode(selected.zip);
+    }
+  };
+
+  const handleDeleteAddress = (addressId, e) => {
+    e.stopPropagation();
+    const updated = savedAddresses.filter(addr => addr.id !== addressId);
+    setSavedAddresses(updated);
+    localStorage.setItem(`addresses_${user.email}`, JSON.stringify(updated));
+    if (selectedAddressId === addressId) {
+      setSelectedAddressId('');
+      setShippingName('');
+      setAddress('');
+      setCity('');
+      setZipCode('');
+    }
+  };
 
   if (!user || (cart.items.length === 0 && !checkoutActive)) {
     if (typeof window !== 'undefined') {
@@ -74,6 +132,39 @@ export default function CheckoutPage() {
       if (order && order.id) {
         setSagaOrderId(order.id);
         setPaymentDetails(order);
+
+        // Save address profile if checkbox is checked
+        if (saveAddressCheckbox) {
+          const newAddress = {
+            id: 'addr_' + Date.now(),
+            name: shippingName,
+            street: address,
+            city: city,
+            zip: zipCode
+          };
+          
+          // Check if an address with exact matching fields already exists
+          const existingIndex = savedAddresses.findIndex(
+            addr => addr.name === newAddress.name && 
+                    addr.street === newAddress.street && 
+                    addr.city === newAddress.city && 
+                    addr.zip === newAddress.zip
+          );
+
+          let updated;
+          if (existingIndex > -1) {
+            // Move the existing matching address to the top (most recently used)
+            const existing = savedAddresses[existingIndex];
+            updated = [existing, ...savedAddresses.filter((_, idx) => idx !== existingIndex)];
+          } else {
+            // Prepend new address
+            updated = [newAddress, ...savedAddresses];
+          }
+
+          setSavedAddresses(updated);
+          localStorage.setItem(`addresses_${user.email}`, JSON.stringify(updated));
+          setSelectedAddressId(updated[0].id);
+        }
 
         if (order.mockMode) {
           // If running in developer mock fallback mode, open simulated UPI popup
@@ -249,6 +340,40 @@ export default function CheckoutPage() {
               <span className={styles.sectionNum}>01</span>
               <h3>Shipping Destination</h3>
             </div>
+
+            {savedAddresses.length > 0 && (
+              <div className={styles.savedAddressesContainer}>
+                <label className={styles.addressSectionLabel}>Select Saved Address Profile</label>
+                <div className={styles.addressPills}>
+                  {savedAddresses.map((addr) => (
+                    <div 
+                      key={addr.id}
+                      className={`${styles.addressPill} ${selectedAddressId === addr.id ? styles.activeAddressPill : ''}`}
+                      onClick={() => handleSelectAddress(addr.id)}
+                    >
+                      <div className={styles.addressPillInfo}>
+                        <strong>{addr.name}</strong>
+                        <span>{addr.street}, {addr.city} ({addr.zip})</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        className={styles.deleteAddressBtn} 
+                        onClick={(e) => handleDeleteAddress(addr.id, e)}
+                        title="Delete saved address"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                  <div 
+                    className={`${styles.addressPill} ${selectedAddressId === '' ? styles.activeAddressPill : ''}`}
+                    onClick={() => handleSelectAddress('')}
+                  >
+                    <span style={{ fontWeight: 600 }}>+ Add New Address</span>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div className={styles.row}>
               <div className={styles.inputGroup}>
@@ -257,7 +382,10 @@ export default function CheckoutPage() {
                   type="text" 
                   placeholder="John Doe" 
                   value={shippingName}
-                  onChange={(e) => setShippingName(e.target.value)}
+                  onChange={(e) => {
+                    setShippingName(e.target.value);
+                    setSelectedAddressId(''); // Deselect active pill when editing
+                  }}
                   required 
                 />
               </div>
@@ -270,7 +398,10 @@ export default function CheckoutPage() {
                   type="text" 
                   placeholder="100 Silicon Way, Suite 400" 
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    setSelectedAddressId(''); // Deselect active pill when editing
+                  }}
                   required 
                 />
               </div>
@@ -283,7 +414,10 @@ export default function CheckoutPage() {
                   type="text" 
                   placeholder="San Francisco, CA" 
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                    setSelectedAddressId(''); // Deselect active pill when editing
+                  }}
                   required 
                 />
               </div>
@@ -293,10 +427,23 @@ export default function CheckoutPage() {
                   type="text" 
                   placeholder="94107" 
                   value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
+                  onChange={(e) => {
+                    setZipCode(e.target.value);
+                    setSelectedAddressId(''); // Deselect active pill when editing
+                  }}
                   required 
                 />
               </div>
+            </div>
+
+            <div className={styles.checkboxGroup}>
+              <input 
+                type="checkbox" 
+                id="saveAddress" 
+                checked={saveAddressCheckbox}
+                onChange={(e) => setSaveAddressCheckbox(e.target.checked)}
+              />
+              <label htmlFor="saveAddress">Save this address profile for future checkouts</label>
             </div>
 
             <div className={styles.sectionHeader} style={{ marginTop: '24px' }}>
