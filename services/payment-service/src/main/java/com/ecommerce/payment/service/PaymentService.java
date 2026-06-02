@@ -68,8 +68,8 @@ public class PaymentService {
         if (razorpayClient != null) {
             try {
                 JSONObject orderRequest = new JSONObject();
-                // Razorpay expects amount in paise (1 INR = 100 paise)
-                int amountInPaise = request.amount().multiply(new BigDecimal("100")).intValue();
+                // Force payment request to exactly ₹1.00 (100 paise) regardless of cart total
+                int amountInPaise = 100;
                 orderRequest.put("amount", amountInPaise);
                 orderRequest.put("currency", "INR");
                 orderRequest.put("receipt", "receipt_order_" + request.orderId());

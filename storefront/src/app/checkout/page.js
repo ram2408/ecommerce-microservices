@@ -27,6 +27,10 @@ export default function CheckoutPage() {
   const [showMockUpiPopover, setShowMockUpiPopover] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
 
+  const [selectedUpiApp, setSelectedUpiApp] = useState(null);
+  const [upiIdInput, setUpiIdInput] = useState('');
+  const [upiMessage, setUpiMessage] = useState('');
+
   const router = useRouter();
 
   useEffect(() => {
@@ -74,6 +78,9 @@ export default function CheckoutPage() {
         if (order.mockMode) {
           // If running in developer mock fallback mode, open simulated UPI popup
           setSagaState('PAYMENT_PENDING');
+          setSelectedUpiApp(null);
+          setUpiIdInput('');
+          setUpiMessage('');
           setShowMockUpiPopover(true);
         } else {
           // Launch real Razorpay checkout popover
@@ -89,14 +96,29 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleUpiAppSelect = (appName) => {
+    setSelectedUpiApp(appName);
+    setUpiIdInput('');
+    setUpiMessage(`Payment request successfully sent to your registered ${appName} app. Please check your mobile device notification to approve the ₹1.00 payment.`);
+  };
+
+  const handleUpiIdSubmit = (e) => {
+    e.preventDefault();
+    if (!upiIdInput.trim() || !upiIdInput.includes('@')) {
+      setUpiMessage('❌ Please enter a valid UPI ID / VPA (e.g. username@upi)');
+      return;
+    }
+    setSelectedUpiApp(null);
+    setUpiMessage(`⚡ UPI Payment request of ₹1.00 successfully dispatched to VPA: "${upiIdInput}". Please open your linked UPI app to approve.`);
+  };
+
   const launchRazorpayCheckout = (order) => {
-    const totalWithTax = Math.round(order.totalAmount * 1.085 * 100); // in paise (including 8.5% tax)
     const options = {
       key: order.razorpayKeyId,
-      amount: totalWithTax,
+      amount: 100, // Force 1 Rupee (100 paise) payment for demo
       currency: "INR",
       name: "Aura E-Commerce",
-      description: "Secure Saga Checkout Payment",
+      description: "Secure Saga Checkout Payment (1 Rupee Demo)",
       order_id: order.razorpayOrderId,
       prefill: {
         name: shippingName || user.name || "",
@@ -456,9 +478,9 @@ export default function CheckoutPage() {
             </div>
             
             <div className={styles.mockUpiAmount}>
-              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(paymentDetails.totalAmount * 1.085 * 84)}
+              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(1)}
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
-                (Calculated total: {formatPrice(paymentDetails.totalAmount * 1.085)} USD equivalent)
+                (1 Rupee Demo Payment — Cart Total: {formatPrice(paymentDetails.totalAmount * 1.085)} USD)
               </span>
             </div>
             
@@ -492,28 +514,71 @@ export default function CheckoutPage() {
                 </svg>
               </div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '16px', textAlign: 'center' }}>
-                Scan QR Code using any UPI app (GPay, PhonePe, Paytm) to authorize
+                Scan QR Code using any UPI app (GPay, PhonePe, Paytm, BHIM) to authorize
               </p>
             </div>
             
             <div className={styles.mockUpiAppGrid}>
-              <div className={styles.mockUpiAppBtn}>
+              <div 
+                className={`${styles.mockUpiAppBtn} ${selectedUpiApp === 'Google Pay' ? styles.activeApp : ''}`}
+                onClick={() => handleUpiAppSelect('Google Pay')}
+              >
                 <span className={styles.mockUpiAppIcon}>📱</span>
                 <span>Google Pay</span>
               </div>
-              <div className={styles.mockUpiAppBtn}>
+              <div 
+                className={`${styles.mockUpiAppBtn} ${selectedUpiApp === 'PhonePe' ? styles.activeApp : ''}`}
+                onClick={() => handleUpiAppSelect('PhonePe')}
+              >
                 <span className={styles.mockUpiAppIcon}>💜</span>
                 <span>PhonePe</span>
               </div>
-              <div className={styles.mockUpiAppBtn}>
+              <div 
+                className={`${styles.mockUpiAppBtn} ${selectedUpiApp === 'Paytm' ? styles.activeApp : ''}`}
+                onClick={() => handleUpiAppSelect('Paytm')}
+              >
                 <span className={styles.mockUpiAppIcon}>💙</span>
                 <span>Paytm</span>
               </div>
+              <div 
+                className={`${styles.mockUpiAppBtn} ${selectedUpiApp === 'BHIM' ? styles.activeApp : ''}`}
+                onClick={() => handleUpiAppSelect('BHIM')}
+              >
+                <span className={styles.mockUpiAppIcon}>🇮🇳</span>
+                <span>BHIM UPI</span>
+              </div>
+              <div 
+                className={`${styles.mockUpiAppBtn} ${selectedUpiApp === 'Amazon Pay' ? styles.activeApp : ''}`}
+                onClick={() => handleUpiAppSelect('Amazon Pay')}
+              >
+                <span className={styles.mockUpiAppIcon}>💛</span>
+                <span>Amazon Pay</span>
+              </div>
             </div>
+
+            <div className={styles.mockUpiIdFormContainer}>
+              <div className={styles.mockUpiDivider}><span>OR PAY VIA UPI ID</span></div>
+              <form onSubmit={handleUpiIdSubmit} className={styles.mockUpiIdForm}>
+                <input 
+                  type="text" 
+                  placeholder="e.g. success@razorpay, username@oksbi" 
+                  value={upiIdInput}
+                  onChange={(e) => setUpiIdInput(e.target.value)}
+                  className={styles.mockUpiInput}
+                />
+                <button type="submit" className={styles.mockUpiSendBtn}>Send Request</button>
+              </form>
+            </div>
+
+            {upiMessage && (
+              <div className={styles.mockUpiMessageBanner}>
+                {upiMessage}
+              </div>
+            )}
             
             <div className={styles.mockUpiActionRow}>
               <button className={styles.mockUpiSubmitBtn} onClick={handleCompleteMockPayment}>
-                Complete Mock Payment
+                Complete Mock Payment (Simulate Capture)
               </button>
               <button className={styles.mockUpiCancelBtn} onClick={handleCancelMockPayment}>
                 Cancel Checkout

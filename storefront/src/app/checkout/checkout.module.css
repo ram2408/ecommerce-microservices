@@ -679,3 +679,90 @@
   border-color: var(--border-glass-active);
   color: var(--text-primary);
 }
+
+.mockUpiAppBtn.activeApp {
+  background: rgba(6, 182, 212, 0.08);
+  border-color: #06B6D4;
+  color: #06B6D4;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.15);
+}
+
+.mockUpiIdFormContainer {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.mockUpiDivider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin: 16px 0;
+  letter-spacing: 0.05em;
+}
+
+.mockUpiDivider::before,
+.mockUpiDivider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mockUpiDivider:not(:empty)::before {
+  margin-right: .5em;
+}
+
+.mockUpiDivider:not(:empty)::after {
+  margin-left: .5em;
+}
+
+.mockUpiIdForm {
+  display: flex;
+  gap: 8px;
+}
+
+.mockUpiInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #FFF;
+  transition: all 0.2s ease;
+}
+
+.mockUpiInput:focus {
+  border-color: #06B6D4;
+  outline: none;
+}
+
+.mockUpiSendBtn {
+  background: #06B6D4;
+  color: #FFF;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.mockUpiSendBtn:hover {
+  background: #0891B2;
+}
+
+.mockUpiMessageBanner {
+  background: rgba(6, 182, 212, 0.05);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  color: #06B6D4;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  text-align: left;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
