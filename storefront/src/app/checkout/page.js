@@ -23,12 +23,27 @@ export default function CheckoutPage() {
   const [sagaErrorMsg, setSagaErrorMsg] = useState('');
   const [pollCount, setPollCount] = useState(0);
 
+  // Razorpay and Mock Popover states
+  const [showMockUpiPopover, setShowMockUpiPopover] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState(null);
+
   const router = useRouter();
 
   useEffect(() => {
     if (!user) {
       router.push('/auth');
+      return;
     }
+
+    // Load Razorpay SDK script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
   }, [user, router]);
 
   if (!user || (cart.items.length === 0 && !checkoutActive)) {
@@ -54,9 +69,17 @@ export default function CheckoutPage() {
 
       if (order && order.id) {
         setSagaOrderId(order.id);
-        setSagaState('PAYMENT_PENDING');
-        // Start polling the backend Order Service to visualize Saga updates
-        startSagaPolling(order.id);
+        setPaymentDetails(order);
+
+        if (order.mockMode) {
+          // If running in developer mock fallback mode, open simulated UPI popup
+          setSagaState('PAYMENT_PENDING');
+          setShowMockUpiPopover(true);
+        } else {
+          // Launch real Razorpay checkout popover
+          setSagaState('PAYMENT_PENDING');
+          launchRazorpayCheckout(order);
+        }
       } else {
         throw new Error('Order creation failed on the server.');
       }
@@ -64,6 +87,87 @@ export default function CheckoutPage() {
       setSagaState('FAILED');
       setSagaErrorMsg(err.message || 'Gateway connection timeout or microservice unreachable.');
     }
+  };
+
+  const launchRazorpayCheckout = (order) => {
+    const totalWithTax = Math.round(order.totalAmount * 1.085 * 100); // in paise (including 8.5% tax)
+    const options = {
+      key: order.razorpayKeyId,
+      amount: totalWithTax,
+      currency: "INR",
+      name: "Aura E-Commerce",
+      description: "Secure Saga Checkout Payment",
+      order_id: order.razorpayOrderId,
+      prefill: {
+        name: shippingName || user.name || "",
+        email: user.email || ""
+      },
+      handler: async function (response) {
+        try {
+          // Verify payment signature on backend
+          await apiFetch('/api/payments/verify', {
+            method: 'POST',
+            body: JSON.stringify({
+              orderId: order.id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            })
+          });
+          // Start polling Order status to visualize Saga completion
+          startSagaPolling(order.id);
+        } catch (err) {
+          setSagaState('FAILED');
+          setSagaErrorMsg('Payment verification failed: ' + err.message);
+        }
+      },
+      modal: {
+        ondismiss: function () {
+          setSagaState('FAILED');
+          setSagaErrorMsg('Payment dismissed by user.');
+        }
+      },
+      theme: {
+        color: "#0a0a0c"
+      }
+    };
+
+    if (window.Razorpay) {
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } else {
+      setSagaState('FAILED');
+      setSagaErrorMsg('Razorpay SDK failed to load. Please refresh the page and try again.');
+    }
+  };
+
+  const handleCompleteMockPayment = async () => {
+    if (!paymentDetails) return;
+    setShowMockUpiPopover(false);
+    
+    try {
+      // Send mock verification code to backend verify endpoint
+      await apiFetch('/api/payments/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          orderId: paymentDetails.id,
+          razorpayOrderId: paymentDetails.razorpayOrderId,
+          razorpayPaymentId: 'pay_mock_' + Math.random().toString(36).substring(7),
+          razorpaySignature: 'mock_signature'
+        })
+      });
+      // Start polling status to visualize Saga completion
+      startSagaPolling(paymentDetails.id);
+    } catch (err) {
+      setSagaState('FAILED');
+      setSagaErrorMsg('Mock verification failed: ' + err.message);
+    }
+  };
+
+  const handleCancelMockPayment = () => {
+    setShowMockUpiPopover(false);
+    setSagaState('FAILED');
+    setSagaErrorMsg('Payment cancelled by user (simulated close).');
   };
 
   const startSagaPolling = (orderId) => {
@@ -87,7 +191,7 @@ export default function CheckoutPage() {
             setSagaErrorMsg(
               updatedOrder.totalAmount > 5000 
                 ? 'Saga rolled back: Total amount exceeds the $5,000 credit threshold.' 
-                : 'Saga rolled back: Inventory stock unavailable or card authorization rejected.'
+                : 'Saga rolled back: Inventory stock unavailable or payment failed/timed out.'
             );
           }
         }
@@ -175,44 +279,12 @@ export default function CheckoutPage() {
 
             <div className={styles.sectionHeader} style={{ marginTop: '24px' }}>
               <span className={styles.sectionNum}>02</span>
-              <h3>Vault Card Authorization</h3>
+              <h3>Real-Time UPI Payment Authorization</h3>
             </div>
 
-            <div className={styles.row}>
-              <div className={styles.inputGroup}>
-                <label>Card Number (Transactions &gt; $5000 trigger a simulated Payment Reject)</label>
-                <input 
-                  type="text" 
-                  placeholder="4111 2222 3333 4444" 
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  required 
-                />
-              </div>
-            </div>
-
-            <div className={styles.rowTwoCol}>
-              <div className={styles.inputGroup}>
-                <label>Expiration</label>
-                <input 
-                  type="text" 
-                  placeholder="12/28" 
-                  value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
-                  required 
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>CVV</label>
-                <input 
-                  type="password" 
-                  placeholder="•••" 
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value)}
-                  required 
-                />
-              </div>
-            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+              We support instant UPI transaction processing (QR Code scans, App intent redirects, or VPA collects). Click place order below to authorize payment.
+            </p>
 
             <button type="submit" className={styles.placeOrderBtn}>
               ⚡ Authorize Order & Place Checkout
@@ -279,7 +351,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className={styles.stepInfo}>
                   <h4>1. Submit Checkout to Order Service</h4>
-                  <p>Order compiled in Postgres, status set to <code>PENDING</code>. Emits <code>ORDER_CREATED</code> event.</p>
+                  <p>Order compiled in Postgres, status set to <code>PENDING_PAYMENT</code>. Emits <code>ORDER_CREATED</code> event.</p>
                 </div>
               </div>
 
@@ -295,8 +367,8 @@ export default function CheckoutPage() {
                    sagaState === 'FAILED' && sagaOrderId ? '✗' : '—'}
                 </div>
                 <div className={styles.stepInfo}>
-                  <h4>2. Authorize Charge via Payment Service</h4>
-                  <p>Consumes <code>ORDER_CREATED</code>. Validates $5,000 threshold. Emits <code>PAYMENT_COMPLETED</code> or <code>PAYMENT_FAILED</code>.</p>
+                  <h4>2. Authorize Charge via UPI Payment Gateway</h4>
+                  <p>Initializes Razorpay order. Webhook or client verification triggers <code>PAYMENT_COMPLETED</code> event upon successful authorization.</p>
                 </div>
               </div>
 
@@ -370,6 +442,83 @@ export default function CheckoutPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Simulated UPI Popover Modal */}
+      {showMockUpiPopover && paymentDetails && (
+        <div className={styles.mockUpiOverlay}>
+          <div className={styles.mockUpiCard}>
+            <div className={styles.mockUpiHeader}>
+              <h3>Aura Secure UPI Payment</h3>
+              <p>Simulating UPI scan or app verification</p>
+            </div>
+            
+            <div className={styles.mockUpiAmount}>
+              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(paymentDetails.totalAmount * 1.085 * 84)}
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+                (Calculated total: {formatPrice(paymentDetails.totalAmount * 1.085)} USD equivalent)
+              </span>
+            </div>
+            
+            <div className={styles.mockUpiQrSection}>
+              <div className={styles.mockUpiQrBox}>
+                <svg width="100%" height="100%" viewBox="0 0 100 100" className={styles.mockUpiQrImage}>
+                  {/* Outer boundary */}
+                  <rect x="10" y="10" width="80" height="80" fill="none" stroke="#FFF" strokeWidth="2" />
+                  {/* Scanner square dots patterns */}
+                  <rect x="15" y="15" width="20" height="20" fill="#FFF" />
+                  <rect x="19" y="19" width="12" height="12" fill="#0f121d" />
+                  <rect x="22" y="22" width="6" height="6" fill="#FFF" />
+                  
+                  <rect x="65" y="15" width="20" height="20" fill="#FFF" />
+                  <rect x="69" y="19" width="12" height="12" fill="#0f121d" />
+                  <rect x="72" y="22" width="6" height="6" fill="#FFF" />
+                  
+                  <rect x="15" y="65" width="20" height="20" fill="#FFF" />
+                  <rect x="19" y="69" width="12" height="12" fill="#0f121d" />
+                  <rect x="22" y="72" width="6" height="6" fill="#FFF" />
+                  
+                  {/* Simulated QR payload pixels */}
+                  <rect x="42" y="15" width="6" height="6" fill="#FFF" />
+                  <rect x="52" y="20" width="6" height="6" fill="#FFF" />
+                  <rect x="42" y="30" width="12" height="6" fill="#FFF" />
+                  <rect x="45" y="42" width="6" height="12" fill="#FFF" />
+                  <rect x="60" y="45" width="12" height="6" fill="#FFF" />
+                  <rect x="65" y="60" width="6" height="6" fill="#FFF" />
+                  <rect x="50" y="65" width="6" height="12" fill="#FFF" />
+                  <rect x="70" y="70" width="12" height="12" fill="#FFF" />
+                </svg>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '16px', textAlign: 'center' }}>
+                Scan QR Code using any UPI app (GPay, PhonePe, Paytm) to authorize
+              </p>
+            </div>
+            
+            <div className={styles.mockUpiAppGrid}>
+              <div className={styles.mockUpiAppBtn}>
+                <span className={styles.mockUpiAppIcon}>📱</span>
+                <span>Google Pay</span>
+              </div>
+              <div className={styles.mockUpiAppBtn}>
+                <span className={styles.mockUpiAppIcon}>💜</span>
+                <span>PhonePe</span>
+              </div>
+              <div className={styles.mockUpiAppBtn}>
+                <span className={styles.mockUpiAppIcon}>💙</span>
+                <span>Paytm</span>
+              </div>
+            </div>
+            
+            <div className={styles.mockUpiActionRow}>
+              <button className={styles.mockUpiSubmitBtn} onClick={handleCompleteMockPayment}>
+                Complete Mock Payment
+              </button>
+              <button className={styles.mockUpiCancelBtn} onClick={handleCancelMockPayment}>
+                Cancel Checkout
+              </button>
+            </div>
           </div>
         </div>
       )}
