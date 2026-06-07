@@ -29,6 +29,10 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
+    public List<Product> getProductsByVendor(String vendorId) {
+        return productRepository.findByVendorId(vendorId);
+    }
+
     public Product createProduct(ProductRequest request) {
         Product product = new Product(
                 request.name(),
@@ -36,7 +40,8 @@ public class ProductService {
                 request.price(),
                 request.imageUrl(),
                 request.category(),
-                request.stock()
+                request.stock(),
+                request.vendorId()
         );
         return productRepository.save(product);
     }
@@ -50,6 +55,9 @@ public class ProductService {
         product.setImageUrl(request.imageUrl());
         product.setCategory(request.category());
         product.setStock(request.stock());
+        if (request.vendorId() != null) {
+            product.setVendorId(request.vendorId());
+        }
 
         return productRepository.save(product);
     }

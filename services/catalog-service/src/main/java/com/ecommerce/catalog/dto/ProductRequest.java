@@ -8,5 +8,6 @@ public record ProductRequest(
         BigDecimal price,
         String imageUrl,
         String category,
-        Integer stock
+        Integer stock,
+        String vendorId
 ) {}

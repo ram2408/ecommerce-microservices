@@ -20,7 +20,12 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getProducts(@RequestParam(required = false) String category) {
+    public ResponseEntity<List<Product>> getProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String vendorId) {
+        if (vendorId != null && !vendorId.isBlank()) {
+            return ResponseEntity.ok(productService.getProductsByVendor(vendorId));
+        }
         if (category != null && !category.isBlank()) {
             return ResponseEntity.ok(productService.getProductsByCategory(category));
         }

@@ -31,6 +31,11 @@ export default function AppHeader() {
               My Orders
             </Link>
           )}
+          {user && user.role === 'VENDOR' && (
+            <Link href="/vendor" className={`nav-item ${isActive('/vendor') ? 'active' : ''}`}>
+              Vendor Portal
+            </Link>
+          )}
         </nav>
 
         <div className="header-actions">

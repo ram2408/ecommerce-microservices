@@ -18,12 +18,22 @@ public class Inventory {
     @Column(nullable = false)
     private Integer quantity;
 
+    @Column(nullable = true)
+    private String vendorId;
+
     // Constructors
     public Inventory() {}
 
     public Inventory(String productId, Integer quantity) {
         this.productId = productId;
         this.quantity = quantity;
+        this.vendorId = "SYSTEM";
+    }
+
+    public Inventory(String productId, Integer quantity, String vendorId) {
+        this.productId = productId;
+        this.quantity = quantity;
+        this.vendorId = vendorId != null ? vendorId : "SYSTEM";
     }
 
     // Getters and Setters
@@ -49,5 +59,13 @@ public class Inventory {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public String getVendorId() {
+        return vendorId;
+    }
+
+    public void setVendorId(String vendorId) {
+        this.vendorId = vendorId;
     }
 }

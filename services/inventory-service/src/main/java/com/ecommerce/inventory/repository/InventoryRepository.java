@@ -4,9 +4,11 @@ import com.ecommerce.inventory.model.Inventory;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface InventoryRepository extends CrudRepository<Inventory, Long> {
     Optional<Inventory> findByProductId(String productId);
+    List<Inventory> findByVendorId(String vendorId);
 }

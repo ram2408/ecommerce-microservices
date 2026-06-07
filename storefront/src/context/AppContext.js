@@ -46,7 +46,11 @@ export function AppProvider({ children }) {
       });
       
       if (response && response.token) {
-        const userObj = { email }; // The email is our local user identifier
+        const userObj = { 
+          email: response.email || email, 
+          name: response.name || email.split('@')[0], 
+          role: response.role || 'CUSTOMER' 
+        };
         setAuthToken(response.token);
         setAuthUser(userObj);
         setToken(response.token);
@@ -62,11 +66,11 @@ export function AppProvider({ children }) {
     }
   };
 
-  const registerUser = async (name, email, password) => {
+  const registerUser = async (name, email, password, role) => {
     try {
       await apiFetch('/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, role })
       });
       
       // Auto login after registration
@@ -84,7 +88,7 @@ export function AppProvider({ children }) {
       });
       
       if (response && response.token) {
-        const userObj = { email: response.email, name: response.name };
+        const userObj = { email: response.email, name: response.name, role: response.role || 'CUSTOMER' };
         setAuthToken(response.token);
         setAuthUser(userObj);
         setToken(response.token);
@@ -107,7 +111,7 @@ export function AppProvider({ children }) {
       });
       
       if (response && response.token) {
-        const userObj = { email: response.email, name: response.name };
+        const userObj = { email: response.email, name: response.name, role: response.role || 'CUSTOMER' };
         setAuthToken(response.token);
         setAuthUser(userObj);
         setToken(response.token);

@@ -223,6 +223,9 @@ export default function CatalogPage() {
                       <span className={styles.categoryChip}>{product.category}</span>
                       <span className={styles.priceTag}>{formatPrice(product.price)}</span>
                     </div>
+                    <div style={{ marginTop: '6px', marginBottom: '6px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Sold by: <span style={{ color: 'var(--secondary)', fontWeight: 600 }}>{product.vendorId ? (product.vendorId.includes('@') ? product.vendorId.split('@')[0] : product.vendorId) : 'SYSTEM'}</span>
+                    </div>
                     <h3>{product.name}</h3>
                     <p className={styles.description}>{product.description}</p>
                     

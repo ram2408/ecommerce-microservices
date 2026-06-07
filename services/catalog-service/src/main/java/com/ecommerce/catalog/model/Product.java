@@ -16,6 +16,7 @@ public class Product {
     private String imageUrl;
     private String category;
     private Integer stock;
+    private String vendorId;
 
     // Constructors
     public Product() {}
@@ -27,6 +28,17 @@ public class Product {
         this.imageUrl = imageUrl;
         this.category = category;
         this.stock = stock;
+        this.vendorId = "SYSTEM"; // Default system vendor
+    }
+
+    public Product(String name, String description, BigDecimal price, String imageUrl, String category, Integer stock, String vendorId) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.category = category;
+        this.stock = stock;
+        this.vendorId = vendorId != null ? vendorId : "SYSTEM";
     }
 
     // Getters and Setters
@@ -50,4 +62,7 @@ public class Product {
 
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
+
+    public String getVendorId() { return vendorId; }
+    public void setVendorId(String vendorId) { this.vendorId = vendorId; }
 }

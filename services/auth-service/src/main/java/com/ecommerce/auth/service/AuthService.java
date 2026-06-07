@@ -39,7 +39,7 @@ public class AuthService {
                 request.email(),
                 passwordEncoder.encode(request.password()),
                 request.name(),
-                "USER" // Default role
+                request.role() != null && !request.role().trim().isEmpty() ? request.role().toUpperCase() : "CUSTOMER"
         );
 
         userRepository.save(user);

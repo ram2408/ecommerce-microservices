@@ -1,9 +1,12 @@
 package com.ecommerce.inventory.controller;
 
 import com.ecommerce.inventory.model.Inventory;
+import com.ecommerce.inventory.model.InventoryAuditLog;
 import com.ecommerce.inventory.service.InventoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -16,12 +19,22 @@ public class InventoryController {
     }
 
     public record StockResponse(String productId, Integer stockQuantity) {}
-    public record UpdateStockRequest(String productId, Integer quantity) {}
+    public record UpdateStockRequest(String productId, Integer quantity, String vendorId) {}
 
     @GetMapping("/{productId}")
     public ResponseEntity<StockResponse> getStockLevel(@PathVariable String productId) {
         Integer quantity = inventoryService.getStockLevel(productId);
         return ResponseEntity.ok(new StockResponse(productId, quantity));
+    }
+
+    @GetMapping("/logs")
+    public ResponseEntity<List<InventoryAuditLog>> getAuditLogs(@RequestParam(required = false) String vendorId) {
+        return ResponseEntity.ok(inventoryService.getAuditLogs(vendorId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Inventory>> getInventory(@RequestParam(required = false) String vendorId) {
+        return ResponseEntity.ok(inventoryService.getInventoryByVendor(vendorId));
     }
 
     @PostMapping
@@ -33,7 +46,7 @@ public class InventoryController {
             throw new IllegalArgumentException("Quantity must be a non-negative integer.");
         }
 
-        Inventory inventory = inventoryService.setStock(request.productId(), request.quantity());
+        Inventory inventory = inventoryService.setStock(request.productId(), request.quantity(), request.vendorId());
         return ResponseEntity.ok(inventory);
     }
 }

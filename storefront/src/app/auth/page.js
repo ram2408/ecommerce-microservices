@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('CUSTOMER');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -169,7 +170,7 @@ export default function AuthPage() {
 
     try {
       if (isRegistering) {
-        const result = await registerUser(name, email, password);
+        const result = await registerUser(name, email, password, role);
         if (result.success) {
           setSuccess('Account created successfully! Logging you in...');
           setTimeout(() => {
@@ -209,17 +210,42 @@ export default function AuthPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {isRegistering && (
-            <div className={styles.inputGroup}>
-              <label htmlFor="name">Full Name</label>
-              <input 
-                type="text" 
-                id="name" 
-                placeholder="John Doe" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+            <>
+              <div className={styles.inputGroup}>
+                <label htmlFor="name">Full Name</label>
+                <input 
+                  type="text" 
+                  id="name" 
+                  placeholder="John Doe" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label htmlFor="role">Account Type</label>
+                <select 
+                  id="role" 
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    border: '1px solid var(--border-glass)',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontSize: '0.95rem'
+                  }}
+                  required
+                >
+                  <option value="CUSTOMER" style={{ background: '#0e121e' }}>Customer (Purchase Products)</option>
+                  <option value="VENDOR" style={{ background: '#0e121e' }}>Vendor (Sell & Manage Products)</option>
+                </select>
+              </div>
+            </>
           )}
 
           <div className={styles.inputGroup}>
